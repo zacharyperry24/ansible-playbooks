@@ -16,7 +16,7 @@
 
     - name: Define Landscape parameters in variables
       set_fact:
-        LANDSCAPE_ACCOUNT_NAME: "standalone"
+        LANDSCAPE_ACCOUNT_NAME: "standalone" ##ACCOUNT NAME IN LANDSCAPE##
         LANDSCAPE_COMPUTER_TITLE: "{{ ansible_hostname }}" 
         LANDSCAPE_URL: "https://X.X.X.X/message-system" ##IP FOR LANDSCAPE SERVER##
         LANDSCAPE_PING_URL: "http://X.X.X.X/ping" ##IP FOR LANDSCAPE SERVER##
