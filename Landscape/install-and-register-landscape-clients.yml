@@ -1,0 +1,63 @@
+---
+- name: Install and Configure Landscape Client
+  hosts: ##HOSTS##
+  become: true
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+      become: true
+
+    - name: Install landscape-client package
+      apt:
+        name: landscape-client
+        state: present
+      become: true
+
+    - name: Define Landscape parameters in variables
+      set_fact:
+        LANDSCAPE_ACCOUNT_NAME: "standalone"
+        LANDSCAPE_COMPUTER_TITLE: "{{ ansible_hostname }}" 
+        LANDSCAPE_URL: "https://X.X.X.X/message-system" ##IP FOR LANDSCAPE SERVER##
+        LANDSCAPE_PING_URL: "http://X.X.X.X/ping" ##IP FOR LANDSCAPE SERVER##
+
+    - name: Copy file to target hosts
+      copy:
+        src: /etc/ssl/certs/landscape_server_ca.crt ##THIS KEY IS AUTOMATICALLY CREATED, NAMED, AND PLACED IN THIS LOCATION ON THE SERVER WHEN "QUICKSTART" INSTALL IS COMPLETED##
+        dest: /etc/landscape/server.pem
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Append SSL public key path to client.conf
+      blockinfile:
+        path: "/etc/landscape/client.conf"
+        block: "ssl_public_key = /etc/landscape/server.pem"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK"
+
+    - name: Ensure owner of ca.cert is root
+      file:
+        path: "/etc/landscape/server.pem"
+        owner: root
+        group: root
+        mode: "0644"
+        state: file
+      become: true
+      
+    - name: Register Landscape client
+      command: >-
+        landscape-config --silent
+        --computer-title="{{ LANDSCAPE_COMPUTER_TITLE }}"
+        --account-name="{{ LANDSCAPE_ACCOUNT_NAME }}"
+        --url="{{ LANDSCAPE_URL }}"
+        --ping-url="{{ LANDSCAPE_PING_URL }}"
+        --script-users="nobody,landscape,root"
+      become: true
+
+    - name: Enable Landscape client service on boot
+      service:
+        name: landscape-client
+        enabled: yes
+        state: started
+      become: true
+
