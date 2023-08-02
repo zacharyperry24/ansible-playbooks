@@ -1,0 +1,28 @@
+---
+- name: Update Wazuh rules and decoders
+  hosts: linux
+  tasks:
+    - name: Create backups directory
+      file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - /var/ossec/etc/rules/backups
+        - /var/ossec/etc/decoders/backups
+
+    - name: Backup existing rules and decoders
+      shell: |
+        for f in /var/ossec/etc/rules/local_*_rules.xml; do
+          mv "$f" "/var/ossec/etc/rules/backups/$(date +\%F)_$(basename $f)"
+        done
+        for f in /var/ossec/etc/decoders/local_*_decoder.xml; do
+          mv "$f" "/var/ossec/etc/decoders/backups/$(date +\%F)_$(basename $f)"
+        done
+
+    - name: Copy new rules and decoders from Ansible server
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+      with_items:
+        - { src: '/etc/ansible/playbooks/wazuh_rules_and_decoders_updater/rules/', dest: '/var/ossec/etc/rules/' }
+        - { src: '/etc/ansible/playbooks/wazuh_rules_and_decoders_updater/decoders/', dest: '/var/ossec/etc/decoders/' }
