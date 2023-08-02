@@ -1,6 +1,6 @@
 ---
 - name: Create local breakglass user account with sudo privileges
-  hosts: linux_prod_servers
+  hosts: ##HOSTS##
   become: yes
 
   vars_prompt:
